@@ -1,0 +1,29 @@
+{
+  "id": "deepseek-chat",
+  "provider": "deepseek",
+  "protocol": "responses",
+  "baseUrl": "https://api.deepseek.com",
+  "upstreamModel": "deepseek-chat",
+  "alias": "deepseek-chat",
+  "apiKeyEnv": "DEEPSEEK_API_KEY",
+  "compatibility": "tool",
+  "documentationChecked": "2026-09-21",
+  "documentation": "https://api-docs.deepseek.com/guides/responses_api/",
+  "validation": {
+    "status": "fixed-regression-passed",
+    "protocol": "responses",
+    "checks": [
+      "20-fixed-agent-tasks",
+      "process-restart",
+      "history-resume",
+      "followup-file-task",
+      "desktop-file-preview"
+    ],
+    "fullAgentCertification": false,
+    "evidence": "docs/DEEPSEEK_CHAT_VALIDATION.md"
+  },
+  "providerResolution": {
+    "observedResponseModel": "deepseek-flash",
+    "note": "Request model remains deepseek-chat; provider resolves this alias."
+  }
+}

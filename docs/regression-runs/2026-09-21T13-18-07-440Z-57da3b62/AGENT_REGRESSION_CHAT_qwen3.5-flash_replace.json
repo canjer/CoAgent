@@ -1,0 +1,43 @@
+{
+  "runId": "2026-09-21T13-18-07-440Z-57da3b62",
+  "model": "qwen3.5-flash",
+  "protocol": "chat-completions",
+  "suite": "file-tasks-v1",
+  "criteria": "Exact bytes, original input unchanged, completed turn, successful shell command, case-specific extra files or nonzero recovery command; unchanged from Responses suite.",
+  "date": "2026-09-21T13:18:15.251Z",
+  "total": 1,
+  "completed": 1,
+  "passed": 1,
+  "results": [
+    {
+      "id": "replace",
+      "pass": true,
+      "status": "completed",
+      "prompt": "Replace all OLD with NEW in result.txt, preserve other text.",
+      "input": "OLD and OLD\nkeep\n",
+      "expected": "NEW and NEW\nkeep\n",
+      "actual": "NEW and NEW\nkeep\n",
+      "commands": 4,
+      "commandEvidence": [
+        {
+          "command": "/bin/zsh -lc 'cat result.txt'",
+          "exitCode": 1
+        },
+        {
+          "command": "/bin/zsh -lc 'ls -la'",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'cat input.txt'",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed 's/OLD/NEW/g' input.txt > result.txt\"",
+          "exitCode": 0
+        }
+      ],
+      "denied": 0,
+      "ms": 7790
+    }
+  ]
+}

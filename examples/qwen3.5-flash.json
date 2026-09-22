@@ -1,0 +1,28 @@
+{
+  "id": "qwen3.5-flash",
+  "provider": "aliyun-model-studio",
+  "protocol": "responses",
+  "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  "upstreamModel": "qwen3.5-flash",
+  "alias": "qwen3.5-flash",
+  "apiKeyEnv": "QWEN_API_KEY",
+  "region": "cn-beijing",
+  "documentation": "https://help.aliyun.com/zh/model-studio/qwen3-5-flash",
+  "validation": {
+    "status": "live-smoke-and-desktop-passed",
+    "fullAgentCertification": false,
+    "evidence": "docs/QWEN_AND_DIFF.md",
+    "fixedRegression": {
+      "passed": 18,
+      "total": 20,
+      "exitCode": 1,
+      "failedCases": [
+        "count",
+        "trim"
+      ],
+      "diagnosticRetry": {
+        "trim": "passed"
+      }
+    }
+  }
+}

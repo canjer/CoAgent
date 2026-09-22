@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {browserActionRisk} from '../apps/desktop/browser-approvals.mjs';
+test('read-only browser calls need no per-action review',()=>{assert.equal(browserActionRisk('browser_snapshot'),'read');assert.equal(browserActionRisk('browser_close'),'read');assert.equal(browserActionRisk('browser_navigate',{url:'https://example.com/docs'}),'navigation');});
+test('external effects and ambiguous action URLs remain individually reviewed',()=>{for(const name of ['browser_click','browser_type','browser_reload','browser_navigate_back','unknown'])assert.equal(browserActionRisk(name),'review');for(const url of ['https://example.com/oauth/authorize','https://example.com/delete','https://example.com/?action=delete'])assert.equal(browserActionRisk('browser_navigate',{url}),'review');});

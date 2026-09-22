@@ -1,0 +1,25 @@
+{
+  "id": "deepseek-flash",
+  "provider": "deepseek",
+  "protocol": "responses",
+  "baseUrl": "https://api.deepseek.com",
+  "upstreamModel": "deepseek-flash",
+  "alias": "deepseek-flash",
+  "apiKeyEnv": "DEEPSEEK_API_KEY",
+  "compatibility": "tool",
+  "documentationChecked": "2026-09-21",
+  "documentation": "https://api-docs.deepseek.com/guides/responses_api/",
+  "validation": {
+    "status": "limited-live-smoke-passed",
+    "protocol": "responses",
+    "checks": [
+      "read-write-command-verification",
+      "process-restart",
+      "history-resume",
+      "followup-file-task"
+    ],
+    "persistedTurns": 2,
+    "fullAgentCertification": false,
+    "evidence": "docs/DEEPSEEK_LIVE_VALIDATION.md"
+  }
+}

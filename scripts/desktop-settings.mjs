@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {_electron as electron} from 'playwright';
+import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join,resolve} from 'node:path';
+const user=await mkdtemp(join(tmpdir(),'coagent-settings-'));let app;let launches=0;
+const secret='fixture-settings-never-real-key';
+async function launch(){const env={...process.env,DEEPSEEK_API_KEY:'fixture-environment-key',QWEN_API_KEY:'',COAGENT_TEST_USER_DATA:user};delete env.COAGENT_MODEL;const packaged=process.env.COAGENT_TEST_APP&&(!process.env.COAGENT_TEST_MIGRATE||launches++>0);app=await electron.launch({...packaged?{executablePath:resolve(process.env.COAGENT_TEST_APP),args:[],cwd:tmpdir()}:{args:[resolve('dist/desktop/main.mjs')]},env});const page=await app.firstWindow();await page.waitForSelector('h1',{timeout:process.env.COAGENT_TEST_APP?60000:30000});await page.getByRole('button',{name:'设置',exact:true}).click();await page.getByLabel('deepseek-chat API Key').waitFor();return page;}
+try{
+ let page=await launch();
+ await page.getByLabel('deepseek-chat API Key').fill(secret);await page.getByRole('button',{name:'保存 deepseek-chat',exact:true}).click();await page.getByText('凭据已加密保存',{exact:true}).waitFor();assert.equal(await page.getByLabel('deepseek-chat API Key').inputValue(),'');const originalCiphertext=await readFile(join(user,'credentials/deepseek-chat.sealed'));assert.equal(originalCiphertext.includes(secret),false);
+ const status=await page.evaluate(()=>window.coagent.call('credentials:status'));assert.equal(status.models[0].source,'system-encrypted');assert.equal(JSON.stringify(status).includes(secret),false);
+ await assert.rejects(page.evaluate(()=>window.coagent.call('credentials:apply',{env:{}})),/Unknown operation/);
+ await page.screenshot({path:'.verification/desktop-settings.png'});
+ await app.close();app=null;page=await launch();const restored=(await page.evaluate(()=>window.coagent.call('credentials:status'))).models[0];assert.equal(restored.source,'system-encrypted');if(process.env.COAGENT_TEST_MIGRATE){assert.match(restored.error,/解密凭据失败/);assert.deepEqual(await readFile(join(user,'credentials/deepseek-chat.sealed')),originalCiphertext);await page.getByLabel('deepseek-chat API Key').fill(secret);await page.getByRole('button',{name:'保存 deepseek-chat',exact:true}).click();await page.getByText('凭据已加密保存',{exact:true}).waitFor();await app.close();app=null;page=await launch();assert.equal((await page.evaluate(()=>window.coagent.call('credentials:status'))).models[0].error,'');console.log('PACKAGE_REKEY=PASS old_ciphertext_preserved_until_explicit_save=true reentry_required=true packaged_restart=true');}else assert.equal(restored.error,'');assert.equal((await page.evaluate(()=>window.coagent.call('state'))).models[0].keyConfigured,true);
+ await page.getByRole('button',{name:'删除 deepseek-chat',exact:true}).click();await page.getByRole('button',{name:'确认删除',exact:true}).click();await page.getByText('已删除本机凭据；存在环境变量时自动使用环境变量',{exact:true}).waitFor();assert.equal((await page.evaluate(()=>window.coagent.call('credentials:status'))).models[0].source,'environment');
+ await app.close();app=null;await writeFile(join(user,'credentials/deepseek-chat.sealed'),'corrupted');page=await launch();assert.match((await page.evaluate(()=>window.coagent.call('credentials:status'))).models[0].error,/解密/);assert.equal((await page.evaluate(()=>window.coagent.call('state'))).models.find(m=>m.id==='deepseek-chat').keyConfigured,false);
+ await page.getByLabel('deepseek-chat API Key').fill(secret);await page.getByRole('button',{name:'保存 deepseek-chat',exact:true}).click();await page.getByText('凭据已加密保存',{exact:true}).waitFor();assert.equal((await page.evaluate(()=>window.coagent.call('state'))).models.find(m=>m.id==='deepseek-chat').keyConfigured,true);
+ console.log('SETTINGS=PASS encryption=true restart=true deletion_fallback=true corruption_repair=true private_IPC_blocked=true model_calls=0');
+}finally{await app?.close();await rm(user,{recursive:true,force:true});}

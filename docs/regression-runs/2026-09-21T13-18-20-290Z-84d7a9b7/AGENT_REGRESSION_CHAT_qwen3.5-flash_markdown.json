@@ -1,0 +1,35 @@
+{
+  "runId": "2026-09-21T13-18-20-290Z-84d7a9b7",
+  "model": "qwen3.5-flash",
+  "protocol": "chat-completions",
+  "suite": "file-tasks-v1",
+  "criteria": "Exact bytes, original input unchanged, completed turn, successful shell command, case-specific extra files or nonzero recovery command; unchanged from Responses suite.",
+  "date": "2026-09-21T13:18:26.781Z",
+  "total": 1,
+  "completed": 1,
+  "passed": 0,
+  "results": [
+    {
+      "id": "markdown",
+      "pass": false,
+      "status": "completed",
+      "prompt": "Extract Markdown headings without hash prefixes into result.txt.",
+      "input": "# Title\ntext\n## Section\n",
+      "expected": "Title\nSection\n",
+      "actual": " Title\n Section\n",
+      "commands": 2,
+      "commandEvidence": [
+        {
+          "command": "/bin/zsh -lc 'cat input.txt'",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"grep '\"'^#'\"' input.txt | sed 's/\"'^#*//'\"' > result.txt && cat result.txt\"",
+          "exitCode": 0
+        }
+      ],
+      "denied": 0,
+      "ms": 6462
+    }
+  ]
+}

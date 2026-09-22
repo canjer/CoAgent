@@ -1,0 +1,43 @@
+{
+  "runId": "2026-09-21T13-18-26-970Z-6d2ec595",
+  "model": "qwen3.5-flash",
+  "protocol": "chat-completions",
+  "suite": "file-tasks-v1",
+  "criteria": "Exact bytes, original input unchanged, completed turn, successful shell command, case-specific extra files or nonzero recovery command; unchanged from Responses suite.",
+  "date": "2026-09-21T13:18:35.863Z",
+  "total": 1,
+  "completed": 1,
+  "passed": 1,
+  "results": [
+    {
+      "id": "patch",
+      "pass": true,
+      "status": "completed",
+      "prompt": "Fix the typo teh to the, writing result.txt.",
+      "input": "teh quick fox\n",
+      "expected": "the quick fox\n",
+      "actual": "the quick fox\n",
+      "commands": 4,
+      "commandEvidence": [
+        {
+          "command": "/bin/zsh -lc 'cat input.txt'",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed 's/teh/the/g' input.txt > result.txt\"",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed 's/teh/the/g' input.txt > result.txt\"",
+          "exitCode": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"cat input.txt | sed 's/teh/the/g' > result.txt && cat result.txt\"",
+          "exitCode": 0
+        }
+      ],
+      "denied": 0,
+      "ms": 8863
+    }
+  ]
+}

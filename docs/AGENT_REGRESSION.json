@@ -1,0 +1,209 @@
+{
+  "model": "deepseek-chat",
+  "date": "2026-09-21T04:58:52.556Z",
+  "total": 20,
+  "completed": 20,
+  "passed": 20,
+  "results": [
+    {
+      "id": "copy",
+      "pass": true,
+      "status": "completed",
+      "expected": "hello\n",
+      "actual": "hello\n",
+      "commands": 2,
+      "denied": 0,
+      "ms": 3111
+    },
+    {
+      "id": "uppercase",
+      "pass": true,
+      "status": "completed",
+      "expected": "ALPHA BETA\n",
+      "actual": "ALPHA BETA\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 4241
+    },
+    {
+      "id": "sort",
+      "pass": true,
+      "status": "completed",
+      "expected": "apple\nmango\nzebra\n",
+      "actual": "apple\nmango\nzebra\n",
+      "commands": 2,
+      "denied": 0,
+      "ms": 2647
+    },
+    {
+      "id": "deduplicate",
+      "pass": true,
+      "status": "completed",
+      "expected": "a\nb\nc\n",
+      "actual": "a\nb\nc\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 4944
+    },
+    {
+      "id": "sum",
+      "pass": true,
+      "status": "completed",
+      "expected": "15\n",
+      "actual": "15\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 4061
+    },
+    {
+      "id": "filter",
+      "pass": true,
+      "status": "completed",
+      "expected": "ERROR one\nERROR two\n",
+      "actual": "ERROR one\nERROR two\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 3177
+    },
+    {
+      "id": "replace",
+      "pass": true,
+      "status": "completed",
+      "expected": "NEW and NEW\nkeep\n",
+      "actual": "NEW and NEW\nkeep\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 6083
+    },
+    {
+      "id": "reverse",
+      "pass": true,
+      "status": "completed",
+      "expected": "three\ntwo\none\n",
+      "actual": "three\ntwo\none\n",
+      "commands": 4,
+      "denied": 0,
+      "ms": 3732
+    },
+    {
+      "id": "unicode",
+      "pass": true,
+      "status": "completed",
+      "expected": "你好，世界🌍\n",
+      "actual": "你好，世界🌍\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 5550
+    },
+    {
+      "id": "json",
+      "pass": true,
+      "status": "completed",
+      "expected": "coAgent\n",
+      "actual": "coAgent\n",
+      "commands": 4,
+      "denied": 0,
+      "ms": 5059
+    },
+    {
+      "id": "csv",
+      "pass": true,
+      "status": "completed",
+      "expected": "35\n",
+      "actual": "35\n",
+      "commands": 4,
+      "denied": 0,
+      "ms": 4418
+    },
+    {
+      "id": "count",
+      "pass": true,
+      "status": "completed",
+      "expected": "3\n",
+      "actual": "3\n",
+      "commands": 6,
+      "denied": 0,
+      "ms": 4200
+    },
+    {
+      "id": "trim",
+      "pass": true,
+      "status": "completed",
+      "expected": "alpha\nbeta\n",
+      "actual": "alpha\nbeta\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 6410
+    },
+    {
+      "id": "join",
+      "pass": true,
+      "status": "completed",
+      "expected": "a,b,c\n",
+      "actual": "a,b,c\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 5512
+    },
+    {
+      "id": "markdown",
+      "pass": true,
+      "status": "completed",
+      "expected": "Title\nSection\n",
+      "actual": "Title\nSection\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 3836
+    },
+    {
+      "id": "patch",
+      "pass": true,
+      "status": "completed",
+      "expected": "the quick fox\n",
+      "actual": "the quick fox\n",
+      "commands": 2,
+      "denied": 0,
+      "ms": 2641
+    },
+    {
+      "id": "nested",
+      "pass": true,
+      "status": "completed",
+      "expected": "nested fixture\n",
+      "actual": "nested fixture\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 4480
+    },
+    {
+      "id": "empty",
+      "pass": true,
+      "status": "completed",
+      "expected": "",
+      "actual": "",
+      "commands": 2,
+      "denied": 0,
+      "ms": 2264
+    },
+    {
+      "id": "recovery",
+      "pass": true,
+      "status": "completed",
+      "expected": "recovered\n",
+      "actual": "recovered\n",
+      "commands": 4,
+      "denied": 0,
+      "ms": 3751
+    },
+    {
+      "id": "multifile",
+      "pass": true,
+      "status": "completed",
+      "expected": "first\nsecond\n",
+      "actual": "first\nsecond\n",
+      "commands": 5,
+      "denied": 0,
+      "ms": 4929
+    }
+  ]
+}

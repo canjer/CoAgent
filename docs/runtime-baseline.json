@@ -1,0 +1,17 @@
+{
+  "codexVersion": "0.155.1",
+  "versionOutput": "codex-cli 0.155.1",
+  "package": "@openai/codex",
+  "repository": "git+https://github.com/openai/codex.git",
+  "license": "Apache-2.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "nativeBinary": "node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+  "nativeSha256": "8eaf1ad12fe6bf89b1710330f58900014322c7c5af677e43be116d8ac5fc0a9e",
+  "npmIntegrity": "sha512-02fAAGyBtlA1zPjEo3kTj/bOSYbPz5DvjLwRZJdV7weFFEDzNFOMjQGmZ/+5CuirYV0hE+AZTrnjzwXYU4AdAQ==",
+  "nativeNpmIntegrity": "sha512-cYxzGcRRoBrncyHlR8ed4yXwcoVJZC1pipGULSyJkGFKXJw/Uu57BklvzayuAptjJIipamnOk32CfUkk1F0bLw==",
+  "generatedFiles": 721,
+  "generatedSha256": "b3568626f42880a711e1ccaad4933fd2bc26f7e3551bef2d25a97f5f9a2d8946",
+  "generator": "codex app-server generate-ts; normalize relative type import suffixes to .js",
+  "node": "v26.8.2"
+}

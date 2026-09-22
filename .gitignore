@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+.local/
+.verification/
+*.log
+.DS_Store
+
+# 本地开发产物，不入库
+DIFF_FILE.patch
+MODIFIED_FILE.zip
+VERIFICATION.txt
+ROLLBACK.sh
+docs/deliveries/

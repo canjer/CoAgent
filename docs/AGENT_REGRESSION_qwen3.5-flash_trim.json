@@ -1,0 +1,19 @@
+{
+  "model": "qwen3.5-flash",
+  "date": "2026-09-21T05:16:08.295Z",
+  "total": 1,
+  "completed": 1,
+  "passed": 1,
+  "results": [
+    {
+      "id": "trim",
+      "pass": true,
+      "status": "completed",
+      "expected": "alpha\nbeta\n",
+      "actual": "alpha\nbeta\n",
+      "commands": 3,
+      "denied": 0,
+      "ms": 8504
+    }
+  ]
+}
