@@ -26,6 +26,6 @@ test('API family validates DeepSeek Chat and migrates legacy OpenAI profiles wit
  const base={id:'custom-'+'a'.repeat(32),label:'Test',upstreamModel:'custom-model',baseUrl:'https://example.com/v1',protocol:'responses'};
  assert.equal(validateProvider(base).apiStyle,'openai');assert.equal(validateProvider(base).protocol,'responses');
  assert.equal(validateProvider({...base,apiStyle:'deepseek',protocol:'chat-completions'}).apiStyle,'deepseek');
- assert.throws(()=>validateProvider({...base,apiStyle:'deepseek'}));assert.throws(()=>validateProvider({...base,apiStyle:'anthropic'}));
+ assert.equal(validateProvider({...base,apiStyle:'deepseek',upstreamModel:'deepseek-flash'}).protocol,'responses');assert.throws(()=>validateProvider({...base,apiStyle:'anthropic'}));
  assert.ok(!('apiKey' in validateProvider({...base,apiKey:'not-stored'})));
 });

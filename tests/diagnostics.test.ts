@@ -42,3 +42,14 @@ test('Qwen text options bind exact official endpoint and model only',()=>{
  assert.deepEqual(chatProfileOptions('https://other.example/v1','qwen3.5-flash'),{});
  assert.deepEqual(chatProfileOptions('https://dashscope.aliyuncs.com/compatible-mode/v1','other'),{});
 });
+import {isOfficialDeepSeekTextModel} from '../packages/model-gateway/src/chat-profile.js';
+test('DeepSeek Flash text profile binds exact official model and endpoint',()=>{
+ for(const base of ['https://api.deepseek.com','https://api.deepseek.com/v1/']){assert(isOfficialDeepSeekTextModel(base,'deepseek-flash'));assert.deepEqual(chatProfileOptions(base,'deepseek-flash'),{thinking:{type:'disabled'}});}
+ for(const base of ['https://api.deepseek.com.evil.test','https://other.example','https://api.deepseek.com/other'])assert.deepEqual(chatProfileOptions(base,'deepseek-flash'),{});
+ assert.deepEqual(chatProfileOptions('https://api.deepseek.com','other'),{});
+});
+test('DeepSeek Pro shares verified text compatibility without matching arbitrary models',()=>{
+ for(const model of ['deepseek-flash','deepseek-v4-pro'])for(const base of ['https://api.deepseek.com','https://api.deepseek.com/v1/'])assert.deepEqual(chatProfileOptions(base,model),{thinking:{type:'disabled'}});
+ assert.deepEqual(chatProfileOptions('https://third-party.example','deepseek-v4-pro'),{});
+ assert.deepEqual(chatProfileOptions('https://api.deepseek.com','deepseek-v4-pro-unknown'),{});
+});

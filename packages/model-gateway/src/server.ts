@@ -1,6 +1,7 @@
 import {chatProfileOptions} from './chat-profile.js';
 import { createServer, type ServerResponse, type IncomingMessage } from 'node:http';
-import { timingSafeEqual } from 'node:crypto';
+import {writeGatewayAudit} from './audit.js';
+import { timingSafeEqual,randomUUID,createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { namespaceTools, chatToResponses, CompatibilityError, object, toChatRequest, type Obj } from './chat-adapter.js';
 import { classifyProviderStatus } from './provider-error.js';
@@ -15,6 +16,8 @@ export interface GatewayOptions {
     alias: string;
   };
   timeoutMs?: number;
+  auditDirectory?: string;
+  auditContext?: () => {workspaceHash?: string; threadId?: string; turnId?: string};
   onDiagnostic?: (event: string) => void;
 }
 
@@ -52,9 +55,11 @@ export async function startGateway(options: GatewayOptions) {
   if (base.username || base.password || base.search || base.hash) throw new Error('Base URL must not contain credentials, query or fragment');
   const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(base.hostname);
   if (base.protocol !== 'https:' && !(base.protocol === 'http:' && loopback)) throw new Error('Use HTTPS except for local model services');
+  const gatewaySessionId=randomUUID();
+  const providerFingerprint=createHash('sha256').update(JSON.stringify(options.provider.protocol+':'+options.provider.baseUrl+':'+options.provider.upstreamModel)).digest('hex');
   const controllers = new Set<AbortController>();
   const server = createServer(async (req, res) => {
-    options.onDiagnostic?.('request:' + req.method + ':' + req.url);
+    options.onDiagnostic?.('request');
     const controller = new AbortController();
     controllers.add(controller);
     const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 60000);
@@ -62,6 +67,13 @@ export async function startGateway(options: GatewayOptions) {
     const json = (status: number, message: string, details: Obj = {}) => {
       res.writeHead(status, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ error: { message, ...details } }));
+    };
+    const requestId=randomUUID();const started=performance.now();
+    let audited=false, resultWritten=false, upstreamStatus:number|undefined;
+    let context:{workspaceHash?:string;threadId?:string;turnId?:string}={};
+    const audit=async(phase:'intent'|'result',outcome:string)=>{
+      if(!options.auditDirectory)return;
+      await writeGatewayAudit(options.auditDirectory,requestId,phase,{version:1,time:new Date().toISOString(),gatewaySessionId,requestId,providerFingerprint,protocol:options.provider.protocol,context,phase,outcome,...(phase==='result'?{durationMs:Math.round(performance.now()-started),upstreamStatus}:{}),capture:'metadata-only'});
     };
     try {
       const actual = Buffer.from(req.headers.authorization ?? '');
@@ -76,15 +88,21 @@ export async function startGateway(options: GatewayOptions) {
       const mapped=chat?namespaceTools(input):null;
       const body = chat ? {...toChatRequest(mapped!.input, options.provider.upstreamModel, 'codex-text'),...chatProfileOptions(options.provider.baseUrl,options.provider.upstreamModel)} : { ...input, model: options.provider.upstreamModel };
       const url = new URL(base.toString().replace(/\/$/, '') + (chat ? '/chat/completions' : '/responses'));
+      const supplied=options.auditContext?.()??{};
+      context=Object.fromEntries(Object.entries(supplied).filter(([k,v])=>['workspaceHash','threadId','turnId'].includes(k)&&typeof v==='string').map(([k,v])=>[k,String(v).slice(0,128)]));
+      await audit('intent','prepared');audited=true;
+      controller.signal.throwIfAborted();
       const upstream = await fetch(url, {
         method: 'POST', redirect: 'error', signal: controller.signal,
         headers: { 'content-type': 'application/json', ...(options.provider.apiKey ? { authorization: 'Bearer ' + options.provider.apiKey } : {}) },
         body: JSON.stringify(body),
       });
+      upstreamStatus=upstream.status;
       options.onDiagnostic?.('upstream-status:' + upstream.status);
       if (!upstream.ok) {
         await upstream.body?.cancel();
         // Do not echo provider bodies: they can contain secrets, request content or private URLs.
+        await audit('result','provider-error');resultWritten=true;
         json(upstream.status, `Model provider returned HTTP ${upstream.status}`, classifyProviderStatus(upstream.status)); return;
       }
       if (!upstream.body) throw new Error('Model provider returned no body');
@@ -101,9 +119,11 @@ export async function startGateway(options: GatewayOptions) {
         res.writeHead(upstream.status, { 'content-type': upstream.headers.get('content-type') ?? 'application/json', 'cache-control': 'no-cache' });
         for await (const chunk of upstream.body) await write(res, chunk);
       }
+      await audit('result','transport-completed');resultWritten=true;
       res.end();
     } catch (error) {
       options.onDiagnostic?.('error:' + (error instanceof Error ? error.name : 'unknown'));
+      if(audited&&!resultWritten){try{await audit('result',controller.signal.aborted?'cancelled-or-timeout':'failed');resultWritten=true;}catch{options.onDiagnostic?.('audit-write-failed');}}
       if (res.destroyed) return;
       const message = error instanceof CompatibilityError ? error.message : controller.signal.aborted ? 'Model request cancelled or timed out' : 'Model stream failed';
       if (res.headersSent) {

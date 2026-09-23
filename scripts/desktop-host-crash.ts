@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {_electron as electron} from 'playwright';
-import {mkdtemp,mkdir,writeFile,rm} from 'node:fs/promises';
+import {mkdtemp,mkdir,writeFile,rm,readdir,readFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {execFileSync} from 'node:child_process';
@@ -20,6 +20,7 @@ try{
  assert.notEqual(state.hostPid,app.process().pid);
  await page.getByLabel('任务描述').fill('Wait for the fixture response.');await page.getByRole('button',{name:'开始任务 ↑'}).click();
  await Promise.race([incoming,new Promise((_,reject)=>setTimeout(()=>reject(new Error('fixture request timeout')),15000))]);
+ const auditDirectory=join(user,'audit','model-gateway');const intents=(await readdir(auditDirectory)).filter(n=>n.endsWith('.intent.json'));assert.equal(intents.length,1);const auditIntent=await readFile(join(auditDirectory,intents[0]!), 'utf8');assert.doesNotMatch(auditIntent,/fixture-not-real|Wait for the fixture response/);assert.equal(JSON.parse(auditIntent).phase,'intent');
  const lines=execFileSync('/bin/ps',['-Ao','pid,ppid,command'],{encoding:'utf8'}).split('\n');
  const child=lines.map(l=>l.trim().match(/^(\d+)\s+(\d+)\s+(.+)$/)).find(m=>m&&Number(m[2])===state.hostPid&&m[3]?.includes('app-server'));
  assert.ok(child,'Codex must be a child of Host');const runtimePid=Number(child[1]);
@@ -43,6 +44,7 @@ try{
  await page.getByRole('button',{name:'已核对，解除阻塞'}).click();
  await page.waitForFunction(async()=> (await (window as any).coagent.call('state')).recovery.status==='reviewed');
  assert.equal(requests,1);
+ assert.equal(await readFile(join(auditDirectory,intents[0]!), 'utf8'),auditIntent);console.log('GATEWAY_AUDIT_HOST=PASS intent_before_send no_credentials no_prompt restart_retained no_replay');
  console.log('DURABLE_RECOVERY=PASS application_restart=true blocked_run=true explicit_ack=true replay_count=0');
  console.log('HOST_CRASH=PASS separate_pid=true runtime_child_cleaned=true UI_alive=true reconnect=true stale_approval_rejected=true replay_count=0');
 }finally{await app.close();await upstream.close();await rm(root,{recursive:true,force:true});}

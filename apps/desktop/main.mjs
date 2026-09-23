@@ -10,7 +10,7 @@ import {fileURLToPath} from 'node:url';
 import {HostClient} from './host-client.mjs';
 const here=dirname(fileURLToPath(import.meta.url));
 let window,host,vault,providers,browser,credentialBusy=false;
-const methods=new Set(['security:prepare','security:confirm','security:cancel','security:config','security:save','security:state','security:start','security:stop','plugins:status','plugins:save','plugins:discover','projects:list','project:select','recovery:ack','recovery:history','state','files','preview','diff','model','list','history','run','stop','approve']);
+const methods=new Set(['audit:list','security:prepare','security:confirm','security:cancel','security:config','security:save','security:state','security:start','security:stop','plugins:status','plugins:save','plugins:discover','projects:list','project:select','recovery:ack','recovery:history','state','files','preview','diff','model','list','history','run','stop','approve']);
 ipcMain.handle('agent:call',async(event,method,args={})=>{
  if(event.sender!==window.webContents||event.senderFrame!==window.webContents.mainFrame)throw new Error('Invalid sender');
  if(method==='browser:resource-grant')return browser.resourceGrant(args);
@@ -30,7 +30,7 @@ ipcMain.handle('agent:call',async(event,method,args={})=>{
   try{
    await host.call('credentials:pause');paused=true;
    if(method==='providers:save'){
-    if(args.id){const old=providers.get(args.id),next=validateProvider(args);if((await vault.stored(old.id)||process.env[old.apiKeyEnv])&&['baseUrl','protocol','upstreamModel'].some(k=>old[k]!==next[k]))throw new Error('请先删除该服务的已保存凭据，再修改地址、协议或模型');}
+    if(args.id){if(!providers.models.some(p=>p.id===args.id))throw new Error('待编辑服务已不存在，请关闭编辑器后重新添加');const old=providers.get(args.id),next=validateProvider(args);if((await vault.stored(old.id)||process.env[old.apiKeyEnv])&&['baseUrl','protocol','upstreamModel'].some(k=>old[k]!==next[k]))throw new Error('请先删除该服务的已保存凭据，再修改地址、协议或模型');}
     const saved=await providers.save(args);
     if(typeof args.apiKey==='string'&&args.apiKey.trim()){
      try{await vault.save(saved.id,args.apiKey.trim());}catch(error){if(!args.id)await providers.remove(saved.id);throw error;}

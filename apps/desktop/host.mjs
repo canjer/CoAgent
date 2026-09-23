@@ -1,3 +1,4 @@
+import {listGatewayAudit} from './audit-reader.mjs';
 import {SecurityDrafts} from './security/drafts.mjs';
 import {composerInput} from './composer-context.mjs';
 import {SecurityService} from './security/service.mjs';
@@ -15,7 +16,7 @@ import { providerFor } from '../../packages/model-gateway/src/profiles.ts';
 import { workspaceDiff } from './diff.mjs';
 import { listFiles, previewFile } from './files.mjs';
 
-import { randomBytes } from 'node:crypto';
+import { randomBytes,createHash } from 'node:crypto';
 import { mkdir, mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -82,7 +83,7 @@ async function openRuntime(){
  const profile=providers.get(selectedModel);const provider=providerFor(profile);
  if(process.env.COAGENT_TEST_BASE_URL)provider.baseUrl=process.env.COAGENT_TEST_BASE_URL;
  const token=randomBytes(32).toString('hex');
- gateway=await startGateway({token,timeoutMs:90000,provider});
+ gateway=await startGateway({token,timeoutMs:90000,provider,auditDirectory:join(userData,'audit','model-gateway'),auditContext:()=>({workspaceHash:workspace?createHash('sha256').update(workspace).digest('hex'):undefined,threadId:active?.threadId,turnId:active?.turnId})});
  isolated=await isolatedEnvironment(gateway.baseUrl,token,selectedModel);
  const home=join(userData,'runtime');await mkdir(home,{recursive:true,mode:0o700});
  await writeFile(join(home,'gateway-token'),token,{mode:0o600});
@@ -118,6 +119,7 @@ async function openRuntime(){
 function text(value,max=20000){if(typeof value!=='string'||!value.trim()||value.length>max)throw new Error('输入格式错误');return value;}
 async function dispatch(method,args={}){
  switch(method){
+ case 'audit:list':return listGatewayAudit(userData,workspace,{allProjects:args?.allProjects===true});
  case 'security:prepare':if(active||starting||switching||security.active||security.pending)throw new Error('请先停止当前任务');return securityDrafts.prepare(workspace,args.prompt);
  case 'security:cancel':return securityDrafts.cancel(args.id);
  case 'security:confirm':{if(active||starting||switching||security.active||security.pending)throw new Error('请先停止当前任务');if(args.confirmed!==true)throw new Error('请确认测试计划');const draft=securityDrafts.consume(workspace,args.id);return security.start(workspace,{confirmed:true,tool:draft.tool,urls:draft.urls},draft);}
