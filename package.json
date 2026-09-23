@@ -42,7 +42,10 @@
     "test:desktop:command-scopes": "tsx scripts/desktop-command-scopes.ts",
     "test:desktop:projects": "tsx scripts/desktop-projects.ts",
     "test:desktop:security": "node scripts/desktop-security.mjs",
-    "test:desktop:command-risk": "tsx scripts/desktop-command-risk.ts"
+    "test:desktop:command-risk": "tsx scripts/desktop-command-risk.ts",
+    "test:desktop:composer": "tsx scripts/desktop-composer.ts",
+    "test:desktop:layout-menu": "node scripts/desktop-layout-menu.mjs",
+    "test:desktop:security-draft": "node scripts/desktop-security-draft.mjs"
   },
   "dependencies": {
     "@openai/codex": "0.155.1",

@@ -1,3 +1,4 @@
+import {attachments,skills} from './composer-context.mjs';
 import {BrowserService} from './browser-service.mjs';
 import {chatProfileOptions} from '../../packages/model-gateway/src/chat-profile.ts';
 import {diagnoseProvider} from '../../packages/model-gateway/src/diagnostics.ts';
@@ -9,7 +10,7 @@ import {fileURLToPath} from 'node:url';
 import {HostClient} from './host-client.mjs';
 const here=dirname(fileURLToPath(import.meta.url));
 let window,host,vault,providers,browser,credentialBusy=false;
-const methods=new Set(['security:config','security:save','security:state','security:start','security:stop','plugins:status','plugins:save','plugins:discover','projects:list','project:select','recovery:ack','recovery:history','state','files','preview','diff','model','list','history','run','stop','approve']);
+const methods=new Set(['security:prepare','security:confirm','security:cancel','security:config','security:save','security:state','security:start','security:stop','plugins:status','plugins:save','plugins:discover','projects:list','project:select','recovery:ack','recovery:history','state','files','preview','diff','model','list','history','run','stop','approve']);
 ipcMain.handle('agent:call',async(event,method,args={})=>{
  if(event.sender!==window.webContents||event.senderFrame!==window.webContents.mainFrame)throw new Error('Invalid sender');
  if(method==='browser:resource-grant')return browser.resourceGrant(args);
@@ -64,6 +65,12 @@ ipcMain.handle('agent:call',async(event,method,args={})=>{
    try{if(paused)await host.call('credentials:apply',{env:await vault.environment()});}finally{credentialBusy=false;}
   }
  }
+ if(method==='composer:pick'){
+  const r=await dialog.showOpenDialog(window,{properties:[args.kind==='folder'?'openDirectory':'openFile','multiSelections']});
+  return r.canceled?[]:attachments(r.filePaths);
+ }
+ if(method==='composer:paths')return attachments(args.paths);
+ if(method==='composer:catalog'){const state=await host.call('state');const p=await host.call('plugins:status');return {skills:await skills(state.workspace),plugins:[...(p.config.browserEnabled?[{id:'browser',enabled:true}]:[]),...p.config.servers.map(s=>({id:s.id,enabled:s.enabled}))]};}
  if(method==='choose'){
   const result=await dialog.showOpenDialog(window,{properties:['openDirectory']});
   if(result.canceled)return (await host.call('state')).workspace;

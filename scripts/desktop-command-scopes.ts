@@ -21,11 +21,11 @@ try{
  assert.equal(await page.getByRole('alert').count(),0);
  await page.evaluate(()=>{(window as any).commandScopeEvents=[];(window as any).coagent.subscribe((e:any)=>{if(e.method==='command/auto-approved')(window as any).commandScopeEvents.push(e);});});
  const run=async()=>{await page.getByRole('button',{name:'＋ 新建任务'}).click();await page.getByRole('textbox',{name:'任务描述'}).fill('Run command scope fixture.');await page.getByRole('button',{name:'开始任务 ↑'}).click();};
- await run();await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).waitFor({timeout:20000});await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).click();
+ await run();await page.locator('.approval-scope summary').click();await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).waitFor({timeout:20000});await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).click();
  const different=page.locator('.approval').filter({hasText:'OTHER'});await different.waitFor({timeout:20000});assert.equal(await readFile(join(workspace,'approval.txt'),'utf8'),'SAME\nSAME\n');
  assert.equal(await page.evaluate(()=>(window as any).commandScopeEvents.length),1);
  await different.getByRole('button',{name:'允许此次操作',exact:true}).click();await page.locator('.badge').filter({hasText:'准备就绪'}).waitFor();assert.equal(await readFile(join(workspace,'approval.txt'),'utf8'),'SAME\nSAME\nOTHER\n');
- await run();await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).waitFor({timeout:20000});await page.getByRole('button',{name:'拒绝',exact:true}).click();await page.locator('.badge').filter({hasText:'准备就绪'}).waitFor();
+ await run();await page.locator('.approval-scope summary').click();await page.getByRole('button',{name:'本次任务允许同类命令',exact:true}).waitFor({timeout:20000});await page.getByRole('button',{name:'拒绝',exact:true}).click();await page.locator('.badge').filter({hasText:'准备就绪'}).waitFor();
  assert.equal(await readFile(join(workspace,'approval.txt'),'utf8'),'SAME\nSAME\nOTHER\n');
  console.log('COMMAND_SCOPE_UI=PASS repeated_command_auto=true changed_command_prompt=true next_task_prompt=true denial_no_effect=true real_runtime=true');
 }finally{await app.close();await upstream.close();await rm(root,{recursive:true,force:true});}

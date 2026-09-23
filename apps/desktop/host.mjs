@@ -1,3 +1,5 @@
+import {SecurityDrafts} from './security/drafts.mjs';
+import {composerInput} from './composer-context.mjs';
 import {SecurityService} from './security/service.mjs';
 import {CommandApprovalScope,commandApprovalKey,proposedCommandPrefix} from './command-approvals.mjs';
 import {browserInstructions as baseBrowserInstructions,browserRiskInstructions} from './browser-policy.mjs';
@@ -23,7 +25,7 @@ import { isolatedEnvironment } from '../../packages/runtime-codex/src/environmen
 import { startGateway } from '../../packages/model-gateway/src/server.ts';
 const userData=process.argv[2];
 const providers=new ProviderRegistry(userData);
-const security=new SecurityService(userData);
+const security=new SecurityService(userData);const securityDrafts=new SecurityDrafts();
 const plugins=new PluginRegistry(userData);
 const projects=new ProjectRegistry(userData);
 const settings=new JsonStore(join(userData,'settings.json'),settingsSchema,{version:1,workspace:'',model:'deepseek-chat'});
@@ -116,6 +118,9 @@ async function openRuntime(){
 function text(value,max=20000){if(typeof value!=='string'||!value.trim()||value.length>max)throw new Error('输入格式错误');return value;}
 async function dispatch(method,args={}){
  switch(method){
+ case 'security:prepare':if(active||starting||switching||security.active||security.pending)throw new Error('请先停止当前任务');return securityDrafts.prepare(workspace,args.prompt);
+ case 'security:cancel':return securityDrafts.cancel(args.id);
+ case 'security:confirm':{if(active||starting||switching||security.active||security.pending)throw new Error('请先停止当前任务');if(args.confirmed!==true)throw new Error('请确认测试计划');const draft=securityDrafts.consume(workspace,args.id);return security.start(workspace,{confirmed:true,tool:draft.tool,urls:draft.urls},draft);}
  case 'security:config':return security.config(workspace);
  case 'security:save':if(active||starting)throw new Error('请先停止当前 Agent 任务');return security.save(workspace,args);
  case 'security:state':return security.state(workspace);
@@ -172,15 +177,16 @@ async function dispatch(method,args={}){
  case 'list':{if(!workspace)return [];await connect();const list=await runtime.listSessions(workspace);for(const t of list.data)sessions.add(t.id);return list.data;}
  case 'history':{text(args.id);if(!sessions.has(args.id))throw new Error('会话不存在');await connect();return (await runtime.readSession(args.id)).thread;}
  case 'run':{
+  if(args.context?.mode==='security')throw new Error('安全测试必须通过确认卡入口执行');
   if(security.active||security.pending)throw new Error('请先停止安全测试');
   await journal.tail;if(persistenceError)throw new Error(persistenceError);if(journal.blocked)throw new Error('存在待核对任务，请先核对文件与历史');
   if(active||starting||switching)throw new Error('已有任务运行中');if(!workspace)throw new Error('请先选择工作目录');text(args.prompt);
   commandScope.clear();starting=true;stopRequested=false;completedTurns.clear();interruptedTurns.clear();
-  try{if(prefixGranted)await disconnect();await connect();let id=args.id;
+  try{const input=await composerInput(args.prompt,args.context,workspace,await plugins.read());if(prefixGranted)await disconnect();await connect();let id=args.id;
    if(id){if(!sessions.has(id))throw new Error('会话不存在');await runtime.resumeSession(id,selectedModel,browserInstructions,workspace);}
    else {id=(await runtime.createSession({cwd:workspace,model:selectedModel,sandbox:'workspace-write',approvalPolicy:'on-request',developerInstructions:browserInstructions})).thread.id;sessions.add(id);}
    await journal.begin(workspace,selectedModel,id);
-   const {turn}=await runtime.startTurn({threadId:id,input:[{type:'text',text_elements:[],text:args.prompt}]});await journal.bind(turn.id);if(!completedTurns.has(turn.id))active={threadId:id,turnId:turn.id};if(stopRequested)await stopActive();return {id};
+   const {turn}=await runtime.startTurn({threadId:id,input});await journal.bind(turn.id);if(!completedTurns.has(turn.id))active={threadId:id,turnId:turn.id};if(stopRequested)await stopActive();return {id};
   }catch(error){await journal.uncertain().catch(persistError);publish('recovery/state',recoveryState());throw error;}finally{starting=false;}
  }
  case 'stop':await security.stop();commandScope.clear();stopRequested=true;await stopActive();if(prefixGranted)await disconnect();return true;
